@@ -1,0 +1,37 @@
+# Робот счётчика: каждые ~5 минут берёт сумму со сбора Т-Банка и кладёт в data.json.
+# Страница читает data.json. Коммит делается только если сумма изменилась.
+# Запустить вручную: вкладка Actions -> «Обновить сумму сбора» -> Run workflow.
+name: Обновить сумму сбора
+on:
+  schedule: [{cron: '*/5 * * * *'}]
+  workflow_dispatch:
+permissions: {contents: write}
+concurrency: {group: counter, cancel-in-progress: false}
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Забрать сумму из Т-Банка
+        run: |
+          python3 - <<'PY'
+          import json, urllib.request, datetime
+          URL = ("https://www.tbank-online.com/api/common/v1/cm/crowdfund/info"
+                 "?origin=web%2Cib5%2Cplatform&appName=supreme"
+                 "&nickname=r_edxLcMsQjz.ybfKyOYgnU&crowdFundingId=VOFPn67990")
+          req = urllib.request.Request(URL, headers={"User-Agent": "Mozilla/5.0"})
+          p = json.load(urllib.request.urlopen(req, timeout=30))["payload"]
+          new = {"collected": round(p["collectSum"]["value"]), "goal": round(p["info"]["collectAmount"]["value"])}
+          old = json.load(open("data.json"))
+          if (old.get("collected"), old.get("goal")) != (new["collected"], new["goal"]):
+              new["updated"] = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+              json.dump(new, open("data.json", "w"), ensure_ascii=False)
+              print("Новая сумма:", new)
+          else:
+              print("Без изменений:", new)
+          PY
+      - name: Сохранить, если изменилось
+        run: |
+          git config user.name "counter-bot"; git config user.email "actions@users.noreply.github.com"
+          git add data.json
+          git diff --cached --quiet || (git commit -m "Сумма сбора обновлена" && git push)

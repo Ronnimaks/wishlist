@@ -1,0 +1,194 @@
+<!doctype html>
+<!--
+  ВИШЛИСТ РОННИ МАКСА НА НОВЫЙ ГОД - сбор на коронку
+  Что делает: письмо-вишлист с анимацией «пишется на глазах» и шкалой сбора.
+  Откуда сумма: файл data.json рядом. Его каждые ~5 минут обновляет робот GitHub
+    (.github/workflows/update.yml) - забирает сумму со сбора Т-Банка.
+  Деньги: кнопка ведёт на сбор Т-Банка (ССЫЛКА_НА_СБОР ниже).
+  Проверка без денег: открыть страницу с ?demo=20000 (или ?demo=47000 - «исполнено»).
+-->
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Список подарков Ронни Максу</title>
+<meta name="description" content="Мой вишлист на Новый год - всего один пункт">
+<!-- Превью для пересылки в Telegram / WhatsApp / ВК -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Список подарков Ронни Максу 🎄">
+<meta property="og:description" content="Мой вишлист на Новый год - всего один пункт">
+<meta property="og:image" content="https://ronnimaks.github.io/wishlist/og.jpg">
+<meta property="og:url" content="https://ronnimaks.github.io/wishlist/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&family=Manrope:wght@400;600;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== Цвета и основа ===== */
+:root{--red:#b3261e;--ink:#2a2520;--paper:#fbf6ea;--line:#e4dccb}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow-x:hidden}
+body{background:var(--red);font-family:Manrope,sans-serif;min-height:100vh;color:var(--ink);
+ background-image:radial-gradient(#ffffff22 1.5px,transparent 1.5px);background-size:22px 22px}
+.w{max-width:440px;margin:0 auto;padding:26px 16px 40px}
+
+/* ===== Шапка ===== */
+.top{color:#fff;text-align:center}
+.top .t{font:500 11px Unbounded;letter-spacing:.2em;opacity:.85}
+.top h1{font:800 25px/1.15 Unbounded;margin-top:8px}
+
+/* ===== Лист письма ===== */
+.paper{margin-top:22px;background:var(--paper);border-radius:6px;padding:22px 20px 24px;box-shadow:0 14px 30px #0005;position:relative;
+ background-image:repeating-linear-gradient(var(--paper) 0 33px,var(--line) 33px 34px)}
+.paper:before{content:"";position:absolute;left:0;right:0;top:-6px;height:12px;background:radial-gradient(circle at 6px 0,transparent 6px,var(--paper) 6px) 0 0/12px 12px repeat-x}
+/* Фото владельца - как почтовая марка в углу */
+.stamp{position:absolute;right:14px;top:14px;width:88px;padding:5px;background:#fff;transform:rotate(5deg);
+ border:4px dotted var(--paper);box-shadow:0 3px 8px #0003}
+.stamp img{display:block;width:100%;aspect-ratio:1;object-fit:cover}
+.stamp b{display:block;text-align:center;white-space:nowrap;font:800 7px Unbounded;color:var(--red);margin-top:3px;letter-spacing:.05em}
+
+.hand{font-family:Caveat,cursive;font-size:27px;line-height:34px;padding-right:92px}
+.hand.wide{padding-right:0}
+.hand.h{font-size:31px;font-weight:700}
+.x{color:#9a9083;position:relative;display:inline-block;padding-right:0}
+.x:after{content:"";position:absolute;left:-2px;top:55%;height:2.5px;width:calc(100% + 4px);background:#6d655b;border-radius:2px;
+ transform:scaleX(0);transform-origin:left;transition:transform .35s ease-in}
+.x.cross:after{transform:scaleX(1)}
+.yes{color:var(--red);font-weight:700;font-size:34px;clip-path:inset(0 100% 0 0);transition:clip-path .9s steps(18)}
+.yes.show{clip-path:inset(0 0 0 0)}
+.step{opacity:0;transition:opacity .35s}
+.step.on{opacity:1}
+
+/* ===== Шкала (стиль «полоска здоровья») ===== */
+.hp{background:#1d1828;border:2px solid #3a2f52;border-radius:10px;height:30px;overflow:hidden;position:relative;margin-top:18px}
+.hp i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#ff2d55,#ff6b4a);box-shadow:0 0 18px #ff2d5588;transition:width 1.4s cubic-bezier(.2,.8,.2,1)}
+.hp span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:800 12px Unbounded;color:#fff;text-shadow:0 1px 3px #0008}
+.row{display:flex;justify-content:space-between;font-size:13px;margin-top:8px;color:#5d554b}
+.row b{color:var(--red)}
+
+/* ===== Суммы и кнопка ===== */
+.amt{display:flex;gap:8px;margin-top:18px}
+.amt button{flex:1;border:1.5px solid var(--ink);border-radius:10px;padding:11px 0;font:800 13px Unbounded;background:#fff;color:var(--ink);cursor:pointer}
+.amt button.on{background:var(--ink);color:#fff}
+.btn{display:block;margin-top:12px;background:var(--ink);color:#fff;font:800 16px Unbounded;text-align:center;padding:17px;border-radius:12px;text-decoration:none}
+.btn.off{background:#8a8278;pointer-events:none}
+.mine{margin-top:12px;text-align:center;font-size:14px;color:#5d554b;display:none}
+.mine.on{display:block}.mine b{color:var(--red)}
+
+/* ===== Таинственный подарок ===== */
+.gift{margin-top:18px;display:flex;gap:12px;align-items:center;background:#fff;border:1.5px dashed #c9bfae;border-radius:12px;padding:12px}
+.env{flex:none;width:54px;height:38px;background:#e9dcc2;border-radius:3px;position:relative;overflow:hidden}
+.env:before{content:"";position:absolute;left:0;right:0;top:0;height:0;border-left:27px solid transparent;border-right:27px solid transparent;border-top:20px solid #d8c7a5}
+.env:after{content:"";position:absolute;left:50%;top:13px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px #8e1d17 inset}
+.gift p{font-size:13px;line-height:1.35}.gift b{font-weight:800}
+
+.sign{font-family:Caveat,cursive;font-size:25px;text-align:right;margin-top:14px}
+
+/* ===== Штамп «Исполнено» (когда собрали всё) ===== */
+.done{position:absolute;left:50%;top:38%;display:none;transform:translate(-50%,-50%) rotate(-14deg);
+ border:4px solid #1f7a3a;color:#1f7a3a;font:800 26px Unbounded;padding:8px 16px;border-radius:10px;background:#fbf6eacc;letter-spacing:.06em;pointer-events:none}
+.done.on{display:block;animation:stampIn .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes stampIn{from{opacity:0;transform:translate(-50%,-50%) rotate(-14deg) scale(1.6)}to{opacity:1;transform:translate(-50%,-50%) rotate(-14deg) scale(1)}}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style></head><body><div class="w">
+
+<div class="top"><div class="t">ВИШЛИСТ · НОВЫЙ ГОД 2027</div><h1>Список подарков<br>Ронни Максу</h1></div>
+
+<div class="paper" id="paper">
+ <div class="stamp"><img src="ronni.jpg" alt="Ронни Макс"><b>ПОЧТА · 2027</b></div>
+ <div class="hand h step">Дорогие мои!</div>
+ <div class="hand step">Под ёлку мне нужно вот что:</div>
+ <div class="hand step"><span class="x">1. носки с оленями</span></div>
+ <div class="hand step wide"><span class="x">2. гель для душа</span></div>
+ <div class="hand step"><span class="x">3. ещё одна кружка</span></div>
+ <div class="hand wide yes" id="yes">4. Коронка на зуб 🦷</div>
+
+ <div class="hp"><i id="fill"></i><span id="hptext">0 / 47 000 ₽</span></div>
+ <div class="row"><span>Осталось: <b id="left">47 000 ₽</b></span><span id="days">до 31 декабря</span></div>
+
+ <div class="amt" id="amt">
+  <button data-v="100">100</button><button data-v="500" class="on">500</button><button data-v="1000">1000</button><button data-v="5000">5000</button>
+ </div>
+ <a class="btn" id="give" href="#" target="_blank" rel="noopener">Подарить →</a>
+ <div class="mine" id="mine">Ваш вклад: <b id="mineSum">0 ₽</b> · это <b id="minePct">0%</b> зуба. Спасибо! 🎄</div>
+
+ <div class="gift"><div class="env"></div><p><b>Таинственный подарок от Ронни Макса</b> самому щедрому. Кто это - узнаю только я. Вскрою 31 декабря.</p></div>
+
+ <div class="sign">Ваш Ронни 🎄</div>
+ <div class="done" id="done">ИСПОЛНЕНО ✓</div>
+</div>
+</div>
+
+<script>
+/* ===== НАСТРОЙКИ ===== */
+const ССЫЛКА_НА_СБОР = 'https://t.tb.ru/pm_short/65OQnvs5DV0';
+const ЦЕЛЬ_ПО_УМОЛЧАНИЮ = 47000;
+
+const $ = id => document.getElementById(id);
+const rub = n => Math.round(n).toLocaleString('ru-RU').replace(/ /g,' ') + ' ₽';
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+$('give').href = ССЫЛКА_НА_СБОР;
+
+/* ===== Сумма сбора: data.json (обновляет робот) или ?demo=сумма для проверки ===== */
+async function loadData(){
+  const demo = new URLSearchParams(location.search).get('demo');
+  if (demo !== null) return {collected:+demo, goal:ЦЕЛЬ_ПО_УМОЛЧАНИЮ};
+  try{
+    const r = await fetch('data.json?t=' + Date.now(), {cache:'no-store'});
+    const d = await r.json();
+    return {collected:+d.collected || 0, goal:+d.goal || ЦЕЛЬ_ПО_УМОЛЧАНИЮ};
+  }catch(e){ return {collected:0, goal:ЦЕЛЬ_ПО_УМОЛЧАНИЮ}; }
+}
+
+/* ===== Шкала: заполняется и считает числа ===== */
+let shown = 0;
+function drawBar(d){
+  const pct = Math.min(100, d.collected / d.goal * 100);
+  $('fill').style.width = pct + '%';
+  const from = shown, to = d.collected, t0 = performance.now();
+  (function tick(t){
+    const k = Math.max(0, Math.min(1, (t - t0) / 1400)), v = from + (to - from) * (1 - Math.pow(1 - k, 3));
+    $('hptext').textContent = rub(v).replace(' ₽','') + ' / ' + rub(d.goal);
+    if (k < 1) requestAnimationFrame(tick); else shown = to;
+  })(t0);
+  $('left').textContent = rub(Math.max(0, d.goal - d.collected));
+  const done = d.collected >= d.goal;
+  $('done').classList.toggle('on', done);
+  $('give').classList.toggle('off', done);
+  $('give').textContent = done ? 'Сбор закрыт, спасибо!' : 'Подарить →';
+  window.__goal = d.goal; showMine();
+}
+
+/* ===== Дни до Нового года ===== */
+function drawDays(){
+  const ny = new Date(new Date().getFullYear() + 1, 0, 1), left = Math.ceil((ny - new Date()) / 864e5);
+  if (left <= 31) $('days').textContent = 'до курантов ' + left + ' дн.';
+}
+
+/* ===== «Ваш вклад» - то, что гость выбрал и нажал (хранится только у него) ===== */
+let pick = 500;
+$('amt').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('#amt button').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); pick = +b.dataset.v;
+};
+function getMine(){ try{ return +localStorage.getItem('crown_my') || 0 }catch(e){ return 0 } }
+function showMine(){
+  const m = getMine(); if (!m) return;
+  $('mineSum').textContent = rub(m);
+  $('minePct').textContent = (m / (window.__goal || ЦЕЛЬ_ПО_УМОЛЧАНИЮ) * 100).toLocaleString('ru-RU',{maximumFractionDigits:1}) + '%';
+  $('mine').classList.add('on');
+}
+$('give').onclick = () => { try{ localStorage.setItem('crown_my', getMine() + pick) }catch(e){} setTimeout(showMine, 300); };
+
+/* ===== Анимация «письмо пишется на глазах» ===== */
+async function play(){
+  const data = loadData();
+  try{ await document.fonts.ready }catch(e){}
+  for (const s of document.querySelectorAll('.step')){ s.classList.add('on'); await sleep(260); }
+  for (const x of document.querySelectorAll('.x')){ x.classList.add('cross'); await sleep(380); }
+  $('yes').classList.add('show'); await sleep(950);
+  drawBar(await data);
+  setInterval(async () => drawBar(await loadData()), 60000);
+}
+drawDays(); play();
+</script>
+</body></html>
